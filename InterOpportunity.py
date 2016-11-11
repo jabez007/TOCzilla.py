@@ -4,14 +4,15 @@ import xlrd
 class InterOpportunity(object):
 
     def __init__(self, report_path):
+        self.individual_worksheet = 4
         self.individual_results_headers = None
-        self.individual_results = self._read_xlsx_(report_path, 2)
+        self.individual_results = self._read_xlsx_(report_path, self.individual_worksheet)
 
-    def _read_xlsx_(self, file_path, workbook_sheet = 0, offset = 0):
+    def _read_xlsx_(self, file_path, workbook_sheet=0, offset=0):
         workbook = xlrd.open_workbook(file_path)
         worksheet = workbook.sheet_by_index(workbook_sheet)
 
-        if workbook_sheet == 2:
+        if workbook_sheet == self.individual_worksheet:
             return self._read_individual_results_(worksheet)
 
         rows = []
@@ -40,27 +41,27 @@ class InterOpportunity(object):
 
             try:
                 row[headers['ID']] = int(row[headers['ID']])
-            except ValueError as e:
+            except ValueError:
                 pass
 
             try:
                 row[headers['NPI']] = int(row[headers['NPI']])
-            except ValueError as e:
+            except ValueError:
                 continue  # don't append this row to rows
 
             try:
                 row[headers['Transitions']] = int(row[headers['Transitions']])
-            except ValueError as e:
+            except ValueError:
                 row[headers['Transitions']] = 0
 
             try:
                 row[headers['EP Transitions']] = int(row[headers['EP Transitions']])
-            except ValueError as e:
+            except ValueError:
                 row[headers['EP Transitions']] = 0
 
             try:
                 row[headers['EH Transitions']] = int(row[headers['EH Transitions']])
-            except ValueError as e:
+            except ValueError:
                 row[headers['EH Transitions']] = 0
 
             rows.append(row)
@@ -68,6 +69,8 @@ class InterOpportunity(object):
         return rows   
 
 # # # #
+
+
 '''
 Individuals = ReadXLSX(myIoReport, 2)
 

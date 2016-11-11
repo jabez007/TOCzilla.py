@@ -1,38 +1,40 @@
-#from __future__ import unicode_literals
+# from __future__ import unicode_literals
 import csv
-import os
 
 from InterOpportunity import InterOpportunity
 from ProviderDirectory import ProviderDirectory
 
+
 def main(my_io_report, pd_files):
     my_io_results = InterOpportunity(my_io_report)
-    
+
     individuals = my_io_results.individual_results
     individuals_ini = my_io_results.individual_results_headers["INI"]
     individuals_dot1 = my_io_results.individual_results_headers["ID"]
-    individuals_name = my_io_results.individual_results_headers["Name"]
+    individuals_name = my_io_results.individual_results_headers["Referred to Provider/Location"]
     individuals_direct_address = my_io_results.individual_results_headers["Direct Address"]
     individuals_npi = my_io_results.individual_results_headers["NPI"]
     individuals_transitions = my_io_results.individual_results_headers["Transitions"]
     individuals_ep_transitions = my_io_results.individual_results_headers["EP Transitions"]
     individuals_eh_transitions = my_io_results.individual_results_headers["EH Transitions"]
-    
+
     directories = {}
-    
+
     with open('!AvailableDirectAddresses.csv', 'wb') as outFile:
         writer = csv.writer(outFile, delimiter=',')
-        writer.writerow(['INI','ID','NPI','Name','directAddress','streetLine1','streetLine2','streetLine3','city','state','zip','country','workPhone','fax','addressTitle'])
-        
+        writer.writerow(
+            ['INI', 'ID', 'Name', 'NPI', 'directAddress', 'streetLine1', 'streetLine2', 'streetLine3', 'city', 'state',
+             'zip', 'country', 'workPhone', 'fax', 'addressTitle'])
+
         for pd in pd_files:
             if pd not in directories:
                 directories[pd] = {'Providers': 0,
                                    'Transitions': 0,
                                    'EP Transitions': 0,
                                    'EH Transitions': 0}
-            
+
             provider_directory = ProviderDirectory(pd)
-            
+
             directory = provider_directory.directory
             directory_npi = provider_directory.directory_headers["NPI"]
             directory_direct_address = provider_directory.directory_headers["directAddress"]
@@ -47,12 +49,12 @@ def main(my_io_report, pd_files):
             directory_fax = provider_directory.directory_headers["fax"]
             try:
                 directory_address_title = provider_directory.directory_headers["orgName"]
-            except KeyError as e:
+            except KeyError:
                 directory_address_title = provider_directory.directory_headers["addressTitle"]
-            
+
             for provider in individuals:
                 npi = provider[individuals_npi]
-        
+
                 if npi in directory and not provider[individuals_direct_address]:
                     directories[pd]['Providers'] += 1
                     directories[pd]['Transitions'] += provider[individuals_transitions]
@@ -60,25 +62,26 @@ def main(my_io_report, pd_files):
                     directories[pd]['EH Transitions'] += provider[individuals_eh_transitions]
 
                     for address in directory[npi]:
-                        outLine = [provider[individuals_ini],
-                                   provider[individuals_dot1],
-                                   provider[individuals_name],
-                                   address[directory_npi],  # "%s | %s" % (provider[individuals_npi], address[directory_npi]),
-                                   address[directory_direct_address],
-                                   address[directory_street_line1],
-                                   address[directory_street_line2],
-                                   address[directory_street_line3],
-                                   address[directory_city],
-                                   address[directory_state],
-                                   address[directory_zip],
-                                   address[directory_country],
-                                   address[directory_work_phone],
-                                   address[directory_fax],
-                                   address[directory_address_title]]
-                           
+                        out_line = [provider[individuals_ini],
+                                    provider[individuals_dot1],
+                                    provider[individuals_name],
+                                    address[directory_npi],
+                                    # "%s | %s" % (provider[individuals_npi], address[directory_npi]),
+                                    address[directory_direct_address],
+                                    address[directory_street_line1],
+                                    address[directory_street_line2],
+                                    address[directory_street_line3],
+                                    address[directory_city],
+                                    address[directory_state],
+                                    address[directory_zip],
+                                    address[directory_country],
+                                    address[directory_work_phone],
+                                    address[directory_fax],
+                                    address[directory_address_title]]
+
                         try:
-                            writer.writerow(outLine)
+                            writer.writerow(out_line)
                         except UnicodeDecodeError:
-                            print outLine
-    
+                            print out_line
+
     return directories
